@@ -52,6 +52,7 @@ th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-sp
 .ck2 li.w:before{content:"!";color:var(--warn)}
 .ck2 li.b:before{content:"✕";color:var(--bad)}
 .mu{color:var(--mu);font-size:13px}
+.si{display:block;width:56px;min-height:34px;margin-top:4px;padding:4px;text-align:center}
 @media (max-width:520px){.prow{grid-template-columns:1fr 78px 36px}.prow .ck{grid-column:1/3;grid-row:2}.g{grid-template-columns:38px 1fr}.g .tag{grid-column:2}}
 </style></head><body>
 <header><h1>Americano Tennis Generator</h1><p>Isi pemain dan aturan, lalu buat jadwal doubles untuk 1 court. Hasilnya dilengkapi analisa partner, lawan, dan jatah istirahat.</p></header>
@@ -69,6 +70,7 @@ th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-sp
 <section><h2>Pemain</h2><div id="players"></div>
 <div class="row"><button class="btn alt" id="add" type="button">Tambah pemain</button></div>
 <button class="btn go" id="gen" type="button">Buat jadwal</button>
+<p class="mu" style="margin:8px 0 0">Membuat jadwal baru menghapus skor yang sudah diisi.</p>
 <div id="prog"><i></i></div><div id="err" role="alert"></div>
 </section>
 <div id="out"></div>
@@ -155,7 +157,7 @@ function init(n,NG){
   return s;
 }
 const copy=s=>s.map(g=>g.slice());
-let LAST=null,BUSY=false;
+let LAST=null,BUSY=false,CUR=null,SORT="w";
 function generate(){
   if(BUSY)return;const c=read();if(!c)return;
   const n=c.names.length,NG=c.NG,cost=build(c),RES=4,IT=140000,CH=7000;
@@ -189,9 +191,30 @@ function generate(){
   tick();
 }
 $("#gen").onclick=generate;
+try{const r=JSON.parse(localStorage.getItem("amer1")||"null");if(r&&r.c&&r.s&&r.sc){$("#players").innerHTML="";r.c.names.forEach((x,i)=>addRow(x,r.c.gd[i],r.c.ex[i]));$("#games").value=r.c.NG;$("#mins").value=r.c.mins;$("#rest").value=r.c.R;$("#mm").value=r.c.M;$("#ff").value=r.c.F;show(r.c,r.s,r.sc,true)}}catch(e){}
 
 function tm(t){return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
-function show(c,s){
+function inp(k,t,v){return '<input type="number" inputmode="numeric" min="0" class="si" data-k="'+k+'" data-t="'+t+'" value="'+esc(v)+'" aria-label="Skor game '+(k+1)+(t?' tim B':' tim A')+'">'}
+function save(){try{localStorage.setItem("amer1",JSON.stringify(CUR))}catch(e){}}
+function board(){
+  const c=CUR.c,s=CUR.s,sc=CUR.sc;
+  const st=c.names.map(()=>({p:0,w:0,l:0,d:0,gf:0,ga:0}));let done=0;
+  s.forEach((g,k)=>{
+    const a=sc[k][0],b=sc[k][1];if(a===""||b==="")return;
+    const x=+a,y=+b;if(isNaN(x)||isNaN(y))return;done++;
+    [[g[0],g[1],x,y],[g[2],g[3],y,x]].forEach(z=>[z[0],z[1]].forEach(i=>{const t=st[i];t.p++;t.gf+=z[2];t.ga+=z[3];if(z[2]>z[3])t.w++;else if(z[2]<z[3])t.l++;else t.d++}));
+  });
+  const key=i=>SORT==="g"?[st[i].gf,st[i].gf-st[i].ga,st[i].w]:[st[i].w,st[i].gf-st[i].ga,st[i].gf];
+  const idx=st.map((_,i)=>i).sort((i,j)=>{const a=key(i),b=key(j);for(let z=0;z<3;z++)if(a[z]!==b[z])return b[z]-a[z];return c.names[i].localeCompare(c.names[j])});
+  let h='<p class="mu" style="margin:0 0 8px">Skor terisi '+done+' dari '+s.length+' game. Isi jumlah game yang dimenangkan tiap tim (misal 4 dan 2).</p><div class="row" style="margin:0 0 8px;align-items:center"><span class="mu">Urutkan:</span><select id="sortb" style="width:auto"><option value="w"'+(SORT==="w"?" selected":"")+'>Menang, lalu selisih game</option><option value="g"'+(SORT==="g"?" selected":"")+'>Total game dimenangkan</option></select></div><table><tr><th>#</th><th>Nama</th><th>Main</th><th>Menang</th><th>Seri</th><th>Kalah</th><th>Game +</th><th>Game -</th><th>Selisih</th></tr>';
+  let rk=0,pv="";
+  idx.forEach((i,pos)=>{const t=st[i],kk=key(i).join();if(kk!==pv){rk=pos+1;pv=kk}
+    h+='<tr><td>'+rk+'</td><td><span class="'+(c.gd[i]?"F":"M")+'">'+esc(c.names[i])+'</span></td><td>'+t.p+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td><td>'+t.gf+'</td><td>'+t.ga+'</td><td>'+(t.gf-t.ga)+'</td></tr>'});
+  $("#board").innerHTML=h+'</table>';
+  $("#sortb").onchange=e=>{SORT=e.target.value;board()};
+}
+function show(c,s,sc,quiet){
+  sc=sc||s.map(()=>["",""]);CUR={c:c,s:s,sc:sc};save();
   const {names,gd,ex,NG,R,M,F,mins}=c,n=names.length;
   const nm=i=>'<span class="'+(gd[i]?"F":"M")+'">'+esc(names[i])+"</span>";
   const sym=i=>gd[i]?"♀":"♂";
@@ -214,9 +237,9 @@ function show(c,s){
   const oppU=names.map((_,i)=>Object.keys(op).filter(k=>k.split("-").map(Number).includes(i)).length);
   let h='<section><h2>Jadwal</h2><p class="mu" style="margin:0 0 6px">'+NG+' game x '+mins+' menit = '+NG*mins+' menit. Waktu menunjukkan awal tiap game.</p>';
   s.forEach((g,k)=>{
-    h+='<div class="g"><div class="no">'+(k+1)+'<small>'+tm(k*mins)+'</small></div><div class="vs"><div>'+nm(g[0])+" + "+nm(g[1])+'</div><div class="net"></div><div>'+nm(g[2])+" + "+nm(g[3])+'</div></div><span class="tag'+(types[k].sp?" s":"")+'">'+types[k].t+'</span></div>';
+    h+='<div class="g"><div class="no">'+(k+1)+'<small>'+tm(k*mins)+'</small></div><div class="vs"><div>'+nm(g[0])+" + "+nm(g[1])+inp(k,0,sc[k][0])+'</div><div class="net"></div><div>'+nm(g[2])+" + "+nm(g[3])+inp(k,1,sc[k][1])+'</div></div><span class="tag'+(types[k].sp?" s":"")+'">'+types[k].t+'</span></div>';
   });
-  h+='</section>';
+  h+='</section><section><h2>Klasemen</h2><div id="board" class="sc"></div></section>';
   // analisa
   const L=[];const add=(cls,t)=>L.push('<li class="'+cls+'">'+t+'</li>');
   const mn=Math.min(...cnt),mx=Math.max(...cnt);
@@ -249,9 +272,11 @@ function show(c,s){
   h+='</table></div><p class="mu" style="margin:8px 0 0">Pola: X = main, titik = istirahat. Partner dan lawan = jumlah orang berbeda yang pernah dihadapi.</p></section>';
   h+='<div class="row"><button class="btn" id="cp" type="button">Salin jadwal</button><button class="btn alt" id="re" type="button">Acak ulang</button></div><div class="mu" id="cpm" style="margin-top:6px"></div>';
   $("#out").innerHTML=h;
+  document.querySelectorAll(".si").forEach(e=>e.oninput=()=>{CUR.sc[+e.dataset.k][+e.dataset.t]=e.value.trim();board();save()});
+  board();
   LAST=s.map((g,k)=>(k+1)+". ("+tm(k*mins)+") "+names[g[0]]+" + "+names[g[1]]+" vs "+names[g[2]]+" + "+names[g[3]]).join("\n");
   $("#cp").onclick=async()=>{try{await navigator.clipboard.writeText(LAST);$("#cpm").textContent="Jadwal tersalin."}catch(e){$("#cpm").textContent="Gagal menyalin. Salin manual dari daftar jadwal."}};
   $("#re").onclick=generate;
-  $("#out").scrollIntoView({behavior:"smooth"});
+  if(!quiet)$("#out").scrollIntoView({behavior:"smooth"});
 }
 </script></body></html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Americano Tennis Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2ee;--card:#fff;--tx:#14231d;--mu:#5a6b62;--bd:#d3ddd5;--court:#1f5a48;--ball:#d7e84a;--ballx:#2d3a00;--m:#2b5f9e;--f:#b23a6f;--bad:#b3261e;--ok:#1f7a4d;--warn:#8a5a00;--chip:#e4ece6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a16;--card:#18251f;--tx:#e7efe9;--mu:#9bb0a4;--bd:#2c3d34;--court:#2a7a62;--m:#7fb0ea;--f:#f08ab8;--bad:#ff8a80;--ok:#7fd6a4;--warn:#f0c060;--chip:#22332a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101a16;--card:#18251f;--tx:#e7efe9;--mu:#9bb0a4;--bd:#2c3d34;--court:#2a7a62;--m:#7fb0ea;--f:#f08ab8;--bad:#ff8a80;--ok:#7fd6a4;--warn:#f0c060;--chip:#22332a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Barlow,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--court);color:#fff;padding:22px 16px 18px;border-bottom:4px solid var(--ball)}
+header h1{margin:0;font:700 28px/1.1 "Barlow Semi Condensed",Barlow,system-ui,sans-serif}
+header p{margin:6px 0 0;opacity:.85;font-size:14px;max-width:60ch}
+main{max-width:860px;margin:0 auto;padding:14px 12px 40px}
+section{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:0 0 14px}
+h2{margin:0 0 10px;font:700 20px/1.2 "Barlow Semi Condensed",Barlow,system-ui,sans-serif}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+label.f{display:block;font-size:13px;color:var(--mu)}
+input,select,button{font:inherit;color:var(--tx)}
+input[type=number],input[type=text],select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);min-height:40px}
+.prow{display:grid;grid-template-columns:1fr 84px auto 36px;gap:8px;align-items:center;margin-bottom:8px}
+.ck{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mu);white-space:nowrap}
+.x{border:1px solid var(--bd);background:transparent;border-radius:6px;height:40px;cursor:pointer;color:var(--mu)}
+.btn{background:var(--court);color:#fff;border:0;border-radius:8px;padding:12px 18px;font-weight:600;cursor:pointer;min-height:44px}
+.btn.alt{background:var(--chip);color:var(--tx)}
+.btn.go{background:var(--ball);color:var(--ballx);font-size:17px;width:100%;margin-top:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ball);outline-offset:1px}
+#err{color:var(--bad);font-weight:600;margin-top:8px}
+#prog{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:10px;display:none}
+#prog i{display:block;height:100%;width:0;background:var(--court)}
+.g{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--bd)}
+.g:first-child{border-top:0}
+.no{font:700 20px "Barlow Semi Condensed",Barlow,sans-serif;line-height:1}
+.no small{display:block;font:400 11px Barlow,sans-serif;color:var(--mu);margin-top:3px}
+.vs{display:grid;grid-template-columns:1fr 14px 1fr;gap:6px;align-items:center}
+.vs .net{height:34px;border-left:2px dashed var(--bd);justify-self:center}
+.vs div:last-child{text-align:left}
+.tag{font-size:12px;background:var(--chip);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.tag.s{background:var(--ball);color:var(--ballx);font-weight:600}
+.M{color:var(--m);font-weight:600}.F{color:var(--f);font-weight:600}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.pat{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+.ck2{list-style:none;padding:0;margin:0}
+.ck2 li{padding:7px 0 7px 26px;border-top:1px solid var(--bd);position:relative}
+.ck2 li:first-child{border-top:0}
+.ck2 li:before{content:"✓";position:absolute;left:4px;color:var(--ok);font-weight:700}
+.ck2 li.w:before{content:"!";color:var(--warn)}
+.ck2 li.b:before{content:"✕";color:var(--bad)}
+.mu{color:var(--mu);font-size:13px}
+@media (max-width:520px){.prow{grid-template-columns:1fr 78px 36px}.prow .ck{grid-column:1/3;grid-row:2}.g{grid-template-columns:38px 1fr}.g .tag{grid-column:2}}
+</style></head><body>
+<header><h1>Americano Tennis Generator</h1><p>Isi pemain dan aturan, lalu buat jadwal doubles untuk 1 court. Hasilnya dilengkapi analisa partner, lawan, dan jatah istirahat.</p></header>
+<main>
+<section><h2>Pengaturan</h2>
+<div class="grid">
+<div><label class="f" for="games">Jumlah game</label><input type="number" id="games" value="18" min="1" max="60"></div>
+<div><label class="f" for="mins">Menit per game</label><input type="number" id="mins" value="10" min="1"></div>
+<div><label class="f" for="rest">Max rest berturut-turut</label><input type="number" id="rest" value="2" min="0" max="10"></div>
+<div><label class="f" for="mm">Game cowo ber4</label><input type="number" id="mm" value="3" min="0"></div>
+<div><label class="f" for="ff">Game cewe ber4</label><input type="number" id="ff" value="2" min="0"></div>
+</div>
+<p class="mu" style="margin:10px 0 0">Rest = jumlah game berturut-turut seorang pemain tidak main. Centang “bebas rest” untuk pemain yang boleh istirahat lebih lama.</p>
+</section>
+<section><h2>Pemain</h2><div id="players"></div>
+<div class="row"><button class="btn alt" id="add" type="button">Tambah pemain</button></div>
+<button class="btn go" id="gen" type="button">Buat jadwal</button>
+<div id="prog"><i></i></div><div id="err" role="alert"></div>
+</section>
+<div id="out"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const DEF=[["Kelvin",0,1],["Vio",1,1],["Putu",0,0],["Sandhi",0,0],["Chia",1,0],["Ade",0,0],["Nurul",1,0],["Naja",0,0],["Rubby",1,0],["Mufti",0,0]];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function addRow(n,g,x){
+  const d=document.createElement("div");d.className="prow";
+  d.innerHTML='<input type="text" class="nm" placeholder="Nama" aria-label="Nama pemain"><select class="gd" aria-label="Kelamin"><option value="0">Cowo</option><option value="1">Cewe</option></select><label class="ck"><input type="checkbox" class="ex"> bebas rest</label><button class="x" type="button" aria-label="Hapus pemain">✕</button>';
+  d.querySelector(".nm").value=n||"";d.querySelector(".gd").value=g||0;d.querySelector(".ex").checked=!!x;
+  d.querySelector(".x").onclick=()=>d.remove();$("#players").appendChild(d);
+}
+DEF.forEach(p=>addRow(...p));
+$("#add").onclick=()=>addRow("",0,0);
+
+function read(){
+  const names=[],gd=[],ex=[];
+  document.querySelectorAll(".prow").forEach(r=>{
+    const nm=r.querySelector(".nm").value.trim();if(!nm)return;
+    names.push(nm);gd.push(+r.querySelector(".gd").value);ex.push(r.querySelector(".ex").checked?1:0);
+  });
+  const c={names,gd,ex,NG:+$("#games").value,R:+$("#rest").value,M:+$("#mm").value,F:+$("#ff").value,mins:+$("#mins").value||10};
+  const n=names.length,nM=gd.filter(x=>!x).length,nF=n-nM;
+  let e="";
+  if(n<5)e="Minimal 5 pemain.";
+  else if(n>24)e="Maksimal 24 pemain.";
+  else if(new Set(names.map(s=>s.toLowerCase())).size<n)e="Ada nama pemain yang sama.";
+  else if(!(c.NG>=1))e="Jumlah game minimal 1.";
+  else if(c.M+c.F>c.NG)e="Game cowo ber4 + cewe ber4 melebihi jumlah game.";
+  else if(c.M>0&&nM<4)e="Game cowo ber4 butuh minimal 4 pemain cowo.";
+  else if(c.F>0&&nF<4)e="Game cewe ber4 butuh minimal 4 pemain cewe.";
+  $("#err").textContent=e;return e?null:c;
+}
+
+function build(c){
+  const {gd,ex,NG,R,M,F}=c,n=gd.length,tot=NG*4,lo=Math.floor(tot/n),extra=tot-lo*n;
+  const nM=gd.filter(x=>!x).length,needM=M>0&&nM<=4*M,needF=F>0&&n-nM<=4*F;
+  const cnt=new Int32Array(n),pa=new Int32Array(n*n),op=new Int32Array(n*n),seen=new Int8Array(n),pl=new Int8Array(n*NG);
+  const ix=(u,v)=>u<v?u*n+v:v*n+u;
+  return function(s){
+    let cost=0,mm=0,ff=0;cnt.fill(0);pa.fill(0);op.fill(0);seen.fill(0);pl.fill(0);
+    const masks=new Set();
+    for(let k=0;k<NG;k++){
+      const g=s[k],a=g[0],b=g[1],p=g[2],q=g[3];
+      cnt[a]++;cnt[b]++;cnt[p]++;cnt[q]++;
+      pl[a*NG+k]=pl[b*NG+k]=pl[p*NG+k]=pl[q*NG+k]=1;
+      pa[ix(a,b)]++;pa[ix(p,q)]++;
+      op[ix(a,p)]++;op[ix(a,q)]++;op[ix(b,p)]++;op[ix(b,q)]++;
+      const nf=gd[a]+gd[b]+gd[p]+gd[q];
+      if(nf===0||nf===4){nf?ff++:mm++;seen[a]=seen[b]=seen[p]=seen[q]=1}
+      else{
+        if(nf===2){if(gd[a]===gd[b]||gd[p]===gd[q])cost+=30}else cost+=4;
+        const m=(1<<a)|(1<<b)|(1<<p)|(1<<q);
+        if(masks.has(m))cost+=100;else masks.add(m);
+      }
+    }
+    cost+=200*Math.abs(mm-M)+200*Math.abs(ff-F);
+    let k8=0;
+    for(let i=0;i<n;i++){
+      const v=cnt[i];
+      if(v>lo){k8++;if(ex[i])cost+=20}
+      if(v<lo)cost+=80*(lo-v);else if(v>lo+1)cost+=80*(v-lo-1);
+      if(!seen[i]&&((gd[i]===0&&needM)||(gd[i]===1&&needF)))cost+=100;
+      const lim=ex[i]?R+2:R,w=ex[i]?20:150;let run=0,pr=0;
+      for(let k=0;k<NG;k++){
+        if(pl[i*NG+k]){if(run>lim)cost+=w*(run-lim);run=0;pr++;if(pr>2)cost+=40}
+        else{run++;pr=0}
+      }
+      if(run>lim)cost+=w*(run-lim);
+    }
+    cost+=80*Math.abs(k8-extra);
+    for(let x=0;x<n*n;x++){
+      const v=pa[x];if(v>1)cost+=60*(v-1);
+      const w=op[x];if(w>2){cost+=25*(w-2)*(w-2);if(w>3)cost+=40}
+    }
+    return cost;
+  };
+}
+function init(n,NG){
+  const o=[...Array(n).keys()].sort(()=>Math.random()-.5),s=[];let p=0;
+  for(let k=0;k<NG;k++){const g=[];for(let j=0;j<4;j++)g.push(o[p++%n]);s.push(g)}
+  return s;
+}
+const copy=s=>s.map(g=>g.slice());
+let LAST=null,BUSY=false;
+function generate(){
+  if(BUSY)return;const c=read();if(!c)return;
+  const n=c.names.length,NG=c.NG,cost=build(c),RES=4,IT=140000,CH=7000;
+  let r=0,it=0,s=init(n,NG),cur=cost(s),rb=copy(s),rc=cur,bestS=null,bestC=Infinity;
+  BUSY=true;$("#gen").disabled=true;$("#prog").style.display="block";
+  function tick(){
+    const e=Math.min(it+CH,IT);
+    for(;it<e;it++){
+      const T=Math.max(.1,40*Math.pow(1-it/IT,2)),gi=(Math.random()*NG)|0,pos=(Math.random()*4)|0,rr=Math.random(),G=s[gi];
+      let undo;
+      if(rr<.6){let x;do{x=(Math.random()*n)|0}while(G.includes(x));const o=G[pos];G[pos]=x;undo=()=>{G[pos]=o}}
+      else if(rr<.8){const p2=(pos+1+((Math.random()*3)|0))%4;[G[pos],G[p2]]=[G[p2],G[pos]];undo=()=>{[G[pos],G[p2]]=[G[p2],G[pos]]}}
+      else{
+        const gj=(Math.random()*NG)|0;if(gj===gi)continue;
+        const H=s[gj],p2=(Math.random()*4)|0,a=G[pos],b=H[p2];
+        if(G.includes(b)||H.includes(a))continue;
+        G[pos]=b;H[p2]=a;undo=()=>{G[pos]=a;H[p2]=b};
+      }
+      const nc=cost(s);
+      if(nc<=cur||Math.random()<Math.exp((cur-nc)/T)){cur=nc;if(cur<rc){rc=cur;rb=copy(s)}}else undo();
+    }
+    $("#prog i").style.width=((r+it/IT)/RES*100)+"%";
+    if(it>=IT){
+      if(rc<bestC){bestC=rc;bestS=rb}
+      r++;
+      if(r>=RES){BUSY=false;$("#gen").disabled=false;$("#prog").style.display="none";show(c,bestS);return}
+      s=init(n,NG);cur=cost(s);rb=copy(s);rc=cur;it=0;
+    }
+    setTimeout(tick,0);
+  }
+  tick();
+}
+$("#gen").onclick=generate;
+
+function tm(t){return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
+function show(c,s){
+  const {names,gd,ex,NG,R,M,F,mins}=c,n=names.length;
+  const nm=i=>'<span class="'+(gd[i]?"F":"M")+'">'+esc(names[i])+"</span>";
+  const sym=i=>gd[i]?"♀":"♂";
+  const cnt=Array(n).fill(0),pa={},op={},pat=names.map(()=>[]),types=[];
+  const pk=(u,v)=>u<v?u+"-"+v:v+"-"+u;
+  s.forEach((g,k)=>{
+    const [a,b,p,q]=g;g.forEach(i=>cnt[i]++);
+    for(let i=0;i<n;i++)pat[i].push(g.includes(i)?"X":".");
+    pa[pk(a,b)]=(pa[pk(a,b)]||0)+1;pa[pk(p,q)]=(pa[pk(p,q)]||0)+1;
+    [[a,p],[a,q],[b,p],[b,q]].forEach(([u,v])=>{op[pk(u,v)]=(op[pk(u,v)]||0)+1});
+    const nf=gd[a]+gd[b]+gd[p]+gd[q];let t,sp=0;
+    if(nf===0){t="♂♂♂♂ cowo ber4";sp=1}else if(nf===4){t="♀♀♀♀ cewe ber4";sp=1}
+    else if(nf===2)t=(gd[a]!==gd[b]&&gd[p]!==gd[q])?"♂♀ vs ♂♀ mixed":"♂♂ vs ♀♀";
+    else t=nf===1?"3♂ 1♀":"1♂ 3♀";
+    types.push({t,sp,nf,bal:nf===2&&gd[a]!==gd[b]&&gd[p]!==gd[q]});
+  });
+  const rest=names.map((_,i)=>{let m=0,r=0;pat[i].forEach(x=>{if(x==="X"){m=Math.max(m,r);r=0}else r++});return Math.max(m,r)});
+  const maxC=names.map((_,i)=>{let m=0,r=0;pat[i].forEach(x=>{if(x==="X"){r++;m=Math.max(m,r)}else r=0});return m});
+  const partU=names.map((_,i)=>Object.keys(pa).filter(k=>k.split("-").map(Number).includes(i)).length);
+  const oppU=names.map((_,i)=>Object.keys(op).filter(k=>k.split("-").map(Number).includes(i)).length);
+  let h='<section><h2>Jadwal</h2><p class="mu" style="margin:0 0 6px">'+NG+' game x '+mins+' menit = '+NG*mins+' menit. Waktu menunjukkan awal tiap game.</p>';
+  s.forEach((g,k)=>{
+    h+='<div class="g"><div class="no">'+(k+1)+'<small>'+tm(k*mins)+'</small></div><div class="vs"><div>'+nm(g[0])+" + "+nm(g[1])+'</div><div class="net"></div><div>'+nm(g[2])+" + "+nm(g[3])+'</div></div><span class="tag'+(types[k].sp?" s":"")+'">'+types[k].t+'</span></div>';
+  });
+  h+='</section>';
+  // analisa
+  const L=[];const add=(cls,t)=>L.push('<li class="'+cls+'">'+t+'</li>');
+  const mn=Math.min(...cnt),mx=Math.max(...cnt);
+  add(mx-mn<=1?"":"w","Jumlah main: "+(mn===mx?"semua "+mn+"x":mn+"-"+mx+"x")+(mx>mn?". Main "+mx+"x: "+names.filter((_,i)=>cnt[i]===mx).map(esc).join(", "):"")+".");
+  const bad=names.map((_,i)=>i).filter(i=>!ex[i]&&rest[i]>R);
+  add(bad.length?"b":"","Rest berturut-turut maksimal "+R+" game"+(bad.length?" dilanggar oleh: "+bad.map(i=>esc(names[i])+" ("+rest[i]+")").join(", ")+". Coba naikkan batas rest atau kurangi jumlah game khusus.":" terpenuhi untuk semua pemain.")+(names.some((_,i)=>ex[i])?" Bebas rest: "+names.filter((_,i)=>ex[i]).map((x,j)=>esc(x)+" ("+rest[names.indexOf(x)]+")").join(", ")+".":""));
+  const gm=types.filter(t=>t.nf===0).length,gf=types.filter(t=>t.nf===4).length;
+  add(gm===M?"":"b","Game cowo ber4: "+gm+" dari target "+M+".");
+  add(gf===F?"":"b","Game cewe ber4: "+gf+" dari target "+F+".");
+  [[0,"cowo"],[1,"cewe"]].forEach(([G,lab])=>{
+    const tgt=G?F:M;if(!tgt)return;
+    const inG=new Set();s.forEach((g,k)=>{if(types[k].nf===(G?4:0))g.forEach(i=>inG.add(i))});
+    const miss=names.filter((_,i)=>gd[i]===G&&!inG.has(i));
+    if(miss.length)add("w","Belum kebagian game "+lab+" ber4: "+miss.map(esc).join(", ")+".");
+    else add("","Semua "+lab+" kebagian game "+lab+" ber4 minimal 1x.");
+  });
+  const rp=Object.keys(pa).filter(k=>pa[k]>1);
+  add(rp.length?"w":"",rp.length?"Partner berulang: "+rp.map(k=>{const [u,v]=k.split("-");return esc(names[u])+" + "+esc(names[v])+" ("+pa[k]+"x)"}).join(", ")+". Pemain ini bisa terasa bosan karena sering satu tim.":"Tidak ada partner yang berulang.");
+  const of=Object.keys(op).filter(k=>op[k]>=3).sort((a,b)=>op[b]-op[a]);
+  add(of.length?"w":"",of.length?"Sering jadi lawan: "+of.map(k=>{const [u,v]=k.split("-");return esc(names[u])+" vs "+esc(names[v])+" ("+op[k]+"x)"}).join(", ")+". Potensi monoton buat pasangan ini.":"Tidak ada pasangan yang jadi lawan 3x atau lebih.");
+  const never=[];for(let u=0;u<n;u++)for(let v=u+1;v<n;v++)if(!op[pk(u,v)])never.push(esc(names[u])+" - "+esc(names[v]));
+  add(never.length>n?"w":"",never.length?"Belum pernah jadi lawan ("+never.length+" pasang): "+never.slice(0,12).join(", ")+(never.length>12?", dan lainnya":"")+".":"Semua pemain pernah jadi lawan satu sama lain.");
+  const unb=types.filter(t=>t.nf!==0&&t.nf!==4&&!t.bal).length;
+  add(unb?"w":"",unb?unb+" game punya tim tidak seimbang gender (3:1 atau ♂♂ vs ♀♀). Ini sulit dihindari kalau jumlah cowo dan cewe tidak sama atau game ber4 banyak.":"Semua game non-ber4 berupa mixed seimbang.");
+  const c3=names.map((_,i)=>i).filter(i=>maxC[i]>2);
+  add(c3.length?"w":"","Main beruntun: "+(c3.length?"yang main 3 game atau lebih berturut-turut: "+c3.map(i=>esc(names[i])).join(", ")+".":"tidak ada yang main 3 game berturut-turut."));
+  h+='<section><h2>Analisa</h2><ul class="ck2">'+L.join("")+'</ul></section>';
+  h+='<section><h2>Per pemain</h2><div class="sc"><table><tr><th>Nama</th><th>Main</th><th>Rest maks</th><th>Partner</th><th>Lawan</th><th>Pola</th></tr>';
+  names.forEach((x,i)=>{h+='<tr><td>'+nm(i)+' <span class="mu">'+sym(i)+'</span></td><td>'+cnt[i]+'x</td><td>'+rest[i]+'</td><td>'+partU[i]+' orang</td><td>'+oppU[i]+' orang</td><td class="pat">'+pat[i].join("")+'</td></tr>'});
+  h+='</table></div><p class="mu" style="margin:8px 0 0">Pola: X = main, titik = istirahat. Partner dan lawan = jumlah orang berbeda yang pernah dihadapi.</p></section>';
+  h+='<div class="row"><button class="btn" id="cp" type="button">Salin jadwal</button><button class="btn alt" id="re" type="button">Acak ulang</button></div><div class="mu" id="cpm" style="margin-top:6px"></div>';
+  $("#out").innerHTML=h;
+  LAST=s.map((g,k)=>(k+1)+". ("+tm(k*mins)+") "+names[g[0]]+" + "+names[g[1]]+" vs "+names[g[2]]+" + "+names[g[3]]).join("\n");
+  $("#cp").onclick=async()=>{try{await navigator.clipboard.writeText(LAST);$("#cpm").textContent="Jadwal tersalin."}catch(e){$("#cpm").textContent="Gagal menyalin. Salin manual dari daftar jadwal."}};
+  $("#re").onclick=generate;
+  $("#out").scrollIntoView({behavior:"smooth"});
+}
+</script></body></html>
